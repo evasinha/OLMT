@@ -79,10 +79,12 @@ if ('hcru' in options.res):
     resx = 0.5
     resy = 0.5
     domainfile_orig = ccsm_input+'/share/domains/domain.clm/domain.lnd.360x720_cruncep.100429.nc'
+    pftdyn_orig = ccsm_input+'/lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_simyr1850-2015_c180220.nc'
+    nyears_landuse=166
     if (options.mymodel == 'CLM5'):
         surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr1850_c170824.nc'
     elif (options.crop):
-        surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_24pfts_simyr2000_c150227.nc'
+        surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_0.5x0.5_simyr1850_c200911.nc'
     else:
         if (mysimyr == 2000):
             surffile_orig =  ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_simyr2000_c180216.nc'
@@ -90,8 +92,6 @@ if ('hcru' in options.res):
             #CMIP6 stype (Hurtt v2)
             surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_simyr1850_c180216.nc'
 
-    pftdyn_orig = ccsm_input+'/lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_simyr1850-2015_c180220.nc'
-    nyears_landuse=166
 elif ('f19' in options.res):
     domainfile_orig = ccsm_input+'/share/domains/domain.lnd.fv1.9x2.5_gx1v6.090206.nc'
     surffile_orig =  ccsm_input+'/lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr1850_c180306.nc'
@@ -522,27 +522,32 @@ for n in range(0,n_grids):
         pct_lake     = nffun.getvar(surffile_new, 'PCT_LAKE')
         pct_glacier  = nffun.getvar(surffile_new, 'PCT_GLACIER')
         pct_urban    = nffun.getvar(surffile_new, 'PCT_URBAN')
+        soil_order   = nffun.getvar(surffile_new, 'SOIL_ORDER')
+        labilep      = nffun.getvar(surffile_new, 'LABILE_P')
+        primp        = nffun.getvar(surffile_new, 'APATITE_P')
+        secondp      = nffun.getvar(surffile_new, 'SECONDARY_P')
+        occlp        = nffun.getvar(surffile_new, 'OCCLUDED_P')
         if (options.mymodel == 'CLM5' or options.crop):
           pct_crop = nffun.getvar(surffile_new, 'PCT_CROP')
           pct_cft  = nffun.getvar(surffile_new, 'PCT_CFT')
           #put fake P data in this datset
-          vars_in = ['LABILE_P','APATITE_P','SECONDARY_P','OCCLUDED_P']
-          soil_order = 1
-          labilep = 1.0
-          primp = 1.0
-          secondp = 1.0
-          occlp = 1.0
-          tempdata = Dataset(surffile_new, 'a')
-          for v in vars_in:
-            tempvar = tempdata.createVariable(v, 'f4',('lsmlat','lsmlon',))
-          tempvar = tempdata.createVariable('SOIL_ORDER', 'i4',('lsmlat','lsmlon',))
-          tempdata.close()
-        else:
-          soil_order   = nffun.getvar(surffile_new, 'SOIL_ORDER')
-          labilep      = nffun.getvar(surffile_new, 'LABILE_P')
-          primp        = nffun.getvar(surffile_new, 'APATITE_P')
-          secondp      = nffun.getvar(surffile_new, 'SECONDARY_P')
-          occlp        = nffun.getvar(surffile_new, 'OCCLUDED_P')
+          #vars_in = ['LABILE_P','APATITE_P','SECONDARY_P','OCCLUDED_P']
+          #soil_order = 1
+          #labilep = 1.0
+          #primp = 1.0
+          #secondp = 1.0
+          #occlp = 1.0
+          #tempdata = Dataset(surffile_new, 'a')
+          #for v in vars_in:
+          #  tempvar = tempdata.createVariable(v, 'f4',('lsmlat','lsmlon',))
+          #tempvar = tempdata.createVariable('SOIL_ORDER', 'i4',('lsmlat','lsmlon',))
+          #tempdata.close()
+        #else:
+          #soil_order   = nffun.getvar(surffile_new, 'SOIL_ORDER')
+          #labilep      = nffun.getvar(surffile_new, 'LABILE_P')
+          #primp        = nffun.getvar(surffile_new, 'APATITE_P')
+          #secondp      = nffun.getvar(surffile_new, 'SECONDARY_P')
+          #occlp        = nffun.getvar(surffile_new, 'OCCLUDED_P')
         #input from site-specific information
         soil_color   = nffun.getvar(surffile_new, 'SOIL_COLOR')
         pct_sand     = nffun.getvar(surffile_new, 'PCT_SAND')
@@ -560,7 +565,7 @@ for n in range(0,n_grids):
         npft_crop = 0
         if (options.crop or options.mymodel == 'CLM5'):
             npft = 15
-            npft_crop = 10
+            npft_crop = 36
 
         #read file for site-specific PFT information
         mypft_frac = numpy.zeros([npft+npft_crop], float)
@@ -681,7 +686,25 @@ for n in range(0,n_grids):
             pft_names=['Bare ground','ENF Temperate','ENF Boreal','DNF Boreal','EBF Tropical', \
                        'EBF Temperate', 'DBF Tropical', 'DBF Temperate', 'DBF Boreal', 'EB Shrub' \
                        , 'DB Shrub Temperate', 'BD Shrub Boreal', 'C3 arctic grass', \
-                       'C3 non-arctic grass', 'C4 grass', 'Crop','xxx','xxx']
+                       'C3 non-arctic grass', 'C4 grass', \
+                       'C3 crop', 'C3 crop irrigated', \
+                       'Corn', 'Corn irrigated', \
+                       'Spring temperate cereal', 'Spring temperate cereal irrigated', \
+                       'Winter temperate cereal', 'Winter temperate cereal irrigated', \
+                       'Soybean', 'Soybean irrigated', \
+                       'Cassava', 'Cassava irrigated', \
+                       'Cotton', 'Cotton irrigated', \
+                       'Foddergrass', 'Foddergrass irrigated', \
+                       'Oilpalm', 'Oilpalm irrigated', \
+                       'Other grains', 'Other grains irrigated', \
+                       'Rapeseed', 'Rapeseed irrigated', \
+                       'Rice', 'Rice irrigated', \
+                       'Root tubers', 'Root tubers irrigated', \
+                       'Sugarcane', 'Sugarcane irrigated', \
+                       'Miscanthus', 'Miscanthus irrigated', \
+                       'Switchgrass', 'Switchgrass irrigated', \
+                       'Poplar', 'Poplar irrigated', \
+                       'Willow', 'Willow irrigated']
             if options.marsh and n==1: # Set tidal channel column in marsh mode to zero PFT area
                 print('Setting PFT area in tidal column to zero')
                 mypft_frac = numpy.zeros([npft+npft_crop], float)

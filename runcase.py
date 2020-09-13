@@ -474,7 +474,7 @@ if (options.mymodel == 'ELM'):
     elif('RD' in compset or 'RD' in options.fates_nutrient):
         parm_file = 'clm_params_c180524.nc'
     else:
-        parm_file = 'clm_params_c180301.nc'   #FATES/CROP
+        parm_file = 'clm_params_c210219.nc'   #FATES/CROP
 if (options.mymodel == 'CLM5'):
     parm_file = 'clm5_params.c171117.nc'
 
