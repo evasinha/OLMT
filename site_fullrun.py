@@ -465,9 +465,8 @@ for row in AFdatareader:
         ncycle   = endyear-startyear+1   #number of years in met cycle
         ny_ad = options.ny_ad
         ny_fin = options.nyears_final_spinup
-
-        #AD spinup and final spinup lengths must be multiples of met data cyle.
-        if (int(options.ny_ad) % ncycle != 0):
+        if (int(options.ny_ad) % ncycle != 0 and options.noad == False):
+          #AD spinup and final spinup lengths must be multiples of met data cyle.
           ny_ad = str(int(ny_ad) + ncycle - (int(ny_ad) % ncycle))
         # APW TCOFD
         #if (int(options.nyears_final_spinup) % ncycle !=0 and options.noad == False):

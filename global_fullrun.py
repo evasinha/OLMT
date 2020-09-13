@@ -788,8 +788,6 @@ if (options.mc_ensemble <= 0):
                 if (mysubmit_type == 'qsub'):
                     output.write('#PBS -l walltime='+timestr+'\n')
                 else:
-                    if (myproject != ''):
-                      output.write('#SBATCH -A '+myproject+'\n')
                     output.write('#SBATCH --time='+timestr+'\n')
                     if ('anvil' in options.machine):
                       output.write('#SBATCH --partition=acme-centos6\n')
