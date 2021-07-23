@@ -79,12 +79,12 @@ if ('hcru' in options.res):
     resx = 0.5
     resy = 0.5
     domainfile_orig = ccsm_input+'/share/domains/domain.clm/domain.lnd.360x720_cruncep.100429.nc'
-    pftdyn_orig = ccsm_input+'/lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_simyr1850-2015_c180220.nc'
+    pftdyn_orig = ccsm_input+'/lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_50pfts_simyr1850-2015_c210726.nc'
     nyears_landuse=166
     if (options.mymodel == 'CLM5'):
         surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr1850_c170824.nc'
     elif (options.crop):
-        surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_0.5x0.5_simyr1850_c200911.nc'
+        surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_50pfts_simyr2000_c210713.nc'
     else:
         if (mysimyr == 2000):
             surffile_orig =  ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_simyr2000_c180216.nc'
@@ -725,7 +725,8 @@ for n in range(0,n_grids):
                   #if (mypft_frac[p] > 0.0):
                   #  print('Setting Crop PFT '+str(p)+' to '+str(mypft_frac[p])+'%')
                   pct_cft[p-npft][0][0] = mypft_frac[p]
-                  pct_pft[0][0][0] = 100.0
+                  if (numpy.sum(pct_pft[:,0,0]) == 0): 
+                    pct_pft[0][0][0] = 100.0
                 #maxlai = (monthly_lai).max(axis=0)
                 for t in range(0,12):
                     if (float(options.lai) > 0):
@@ -846,7 +847,9 @@ if (options.nopftdyn == False):
         pct_wetland_1850 = nffun.getvar(surffile_new, 'PCT_WETLAND')
         pct_urban_1850   = nffun.getvar(surffile_new, 'PCT_URBAN')
         pct_pft_1850     = nffun.getvar(surffile_new, 'PCT_NAT_PFT')
-        if (options.mymodel == 'CLM5'):
+        if (options.crop or options.mymodel == 'CLM5'):
+            pct_cft          = nffun.getvar(pftdyn_new, 'PCT_CFT')
+            pct_crop         = nffun.getvar(pftdyn_new, 'PCT_CROP')
             pct_crop_1850    = nffun.getvar(surffile_new, 'PCT_CROP')
         grazing      = nffun.getvar(pftdyn_new, 'GRAZING')
         harvest_sh1  = nffun.getvar(pftdyn_new, 'HARVEST_SH1')
@@ -857,7 +860,7 @@ if (options.nopftdyn == False):
         
         #read file for site-specific PFT information
         dynexist = False
-        mypft_frac=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        mypft_frac = numpy.zeros([npft+npft_crop], numpy.float)
         if (options.surfdata_grid == False and options.site != ''):
             AFdatareader = csv.reader(open(ccsm_input+'/lnd/clm2/PTCLM/'+options.sitegroup+'_pftdata.txt','r'))
             for row in AFdatareader:
@@ -904,8 +907,11 @@ if (options.nopftdyn == False):
         for t in range(0,nyears_landuse):     
             if (options.surfdata_grid == False):
                 if (dynexist):
-                    for p in range(0,npft):
-                        pct_pft[t][p][0][0] = 0.
+                    for p in range(0,npft+npft_crop):
+                        if (p < npft):
+                            pct_pft[t][p][0][0] = 0.
+                        else:
+                            pct_cft[t][p-npft][0][0] = 0.
                     harvest_thisyear = False
                     if pftdata[0][thisrow+1] == 1850+t:
                         thisrow = thisrow+1
@@ -913,8 +919,12 @@ if (options.nopftdyn == False):
                     if (t == 0 or pftdata[16][thisrow] == 1):
                         harvest_thisyear = True
                     for k in range(0,5):
-                        pct_pft[t][int(pftdata[k*2+2][thisrow])][0][0] = \
-                            pftdata[k*2+1][thisrow]
+                        if( numpy.sum(pct_pft[t,:,0,0]) < 100 and int(pftdata[k*2+2][thisrow]) < npft):
+                            pct_pft[t][int(pftdata[k*2+2][thisrow])][0][0] = \
+                                pftdata[k*2+1][thisrow]
+                        else:
+                            pct_cft[t][int(pftdata[k*2+2][thisrow]) - npft][0][0] = \
+                                pftdata[k*2+1][thisrow]
                         grazing[t][0][0] = pftdata[17][thisrow]
                         if (harvest_thisyear):
                             harvest_sh1[t][0][0] = pftdata[13][thisrow]
@@ -930,18 +940,28 @@ if (options.nopftdyn == False):
                             harvest_vh2[t][0][0] = 0.
                 else:
                     for p in range(0,npft):
-                        if (sum(mypft_frac[0:16]) == 0.0):
+                        if (sum(mypft_frac[0:npft+npft_crop]) == 0.0):
                             #No dyn file - use 1850 values from gridded file
-                            pct_pft[t][p][0][0] = pct_pft_1850[p][n]
+                            if (p < npft):
+                                pct_pft[t][p][0][0] = pct_pft_1850[p][n]
+                            else:
+                                pct_cft[t][p-npft][0][0] = pct_cft_1850[p-npft][n]
                         else:
                             #Use specified 1850 values
-                            pct_pft[t][p][0][0] = mypft_frac[p]
+                            if (p < npft):
+                                pct_pft[t][p][0][0] = mypft_frac[p]
+                            else:
+                                pct_cft[t][p-npft][0][0] = mypft_frac[p]
                     grazing[t][0][0] = 0.
                     harvest_sh1[t][0][0] = 0.
                     harvest_sh2[t][0][0] = 0.
                     harvest_sh3[t][0][0] = 0.
                     harvest_vh1[t][0][0] = 0.
                     harvest_vh2[t][0][0] = 0.
+                if((t+1850) < pftdata[0][1]): # crop rotation starts from year in the second row of _dynpftdata.txt file
+                    pct_crop[t][0][0] = 0
+                else:
+                    pct_crop[t][0][0] = numpy.sum(pct_cft[t,:,0,0])
             
                 #
                 # multiple natural PFTs' pct are read-in from a nc file
@@ -993,13 +1013,15 @@ if (options.nopftdyn == False):
                         #WARNING: - large errors may result if files are inconsistent
                         pct_pft[t][p][0][0] = pct_pft[t][p][0][0]/sumpft*(100.0) #-nonpft)
             
-
         ierr = nffun.putvar(pftdyn_new, 'LANDFRAC_PFT', landfrac)
         ierr = nffun.putvar(pftdyn_new, 'PFTDATA_MASK', pftdata_mask)
         ierr = nffun.putvar(pftdyn_new, 'LONGXY', longxy)
         ierr = nffun.putvar(pftdyn_new, 'LATIXY', latixy)
         ierr = nffun.putvar(pftdyn_new, 'AREA', area)
         ierr = nffun.putvar(pftdyn_new, 'PCT_NAT_PFT', pct_pft)
+        if (options.mymodel == 'CLM5' or options.crop):
+            ierr = nffun.putvar(pftdyn_new, 'PCT_CROP', pct_crop)
+            ierr = nffun.putvar(pftdyn_new, 'PCT_CFT', pct_cft)
         ierr = nffun.putvar(pftdyn_new, 'GRAZING', grazing)
         ierr = nffun.putvar(pftdyn_new, 'HARVEST_SH1', harvest_sh1)
         ierr = nffun.putvar(pftdyn_new, 'HARVEST_SH2', harvest_sh2)

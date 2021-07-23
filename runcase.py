@@ -334,6 +334,11 @@ parser.add_option("--maxpatch_pft", dest="maxpatch_pft", default=17, \
 parser.add_option("--landusefile", dest="pftdynfile", default='', \
                   help='user-defined dynamic PFT file')
 parser.add_option("--var_list_pft", dest="var_list_pft", default="",help='Comma-separated list of vars to output at PFT level')
+
+# model structural config options
+parser.add_option("--crop", action="store_true", default=False, \
+                  help="Perform a crop model simulation")
+
 (options, args) = parser.parse_args()
 
 #-------------------------------------------------------------------------------
@@ -1351,6 +1356,8 @@ for i in range(1,int(options.ninst)+1):
             output.write(" flanduse_timeseries = '"+options.pftdynfile+"'\n")
         else:
             output.write(" flanduse_timeseries = '"+rundir+"/surfdata.pftdyn.nc'\n")
+            if (options.crop):
+                output.write(' do_transient_crops = .true.\n')
         if (options.mymodel == 'ELM'):
             output.write(' check_finidat_fsurdat_consistency = .false.\n')
             output.write(' check_finidat_year_consistency = .false.\n')
@@ -1390,6 +1397,7 @@ for i in range(1,int(options.ninst)+1):
             output.write(" use_dynroot = .false.\n")
         if ('CROP' in compset):
             output.write(" suplphos = 'ALL'\n")
+            output.write(" do_budgets = .false.\n")
         if (options.fates_nutrient != ''):
             output.write(" fates_parteh_mode = 2\n")
             if (not options.c_only):
@@ -1741,7 +1749,7 @@ if (options.domainfile == ''):
     os.system('cp '+PTCLMdir+'/temp/domain.nc '+runroot+'/'+casename+'/run/')
 if (options.surffile == ''):
     os.system('cp '+PTCLMdir+'/temp/surfdata.nc '+runroot+'/'+casename+'/run/')
-if ('20TR' in compset and options.nopftdyn == False and options.pftdynfile ==''):
+if (options.istrans or '20TR' in compset and options.nopftdyn == False and options.pftdynfile ==''):
     os.system('cp '+PTCLMdir+'/temp/surfdata.pftdyn.nc '+runroot+'/'+casename+'/run/')
 
 #submit job if requested

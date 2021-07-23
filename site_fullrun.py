@@ -643,6 +643,8 @@ for row in AFdatareader:
           basecmd = basecmd+' --project '+myproject
         if (options.domainfile != ''):
           basecmd = basecmd+' --domainfile '+options.domainfile 
+        if (options.crop):
+            basecmd = basecmd+' --crop'
 
 #---------------- build commands for runcase.py -----------------------------
 
