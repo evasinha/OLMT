@@ -479,7 +479,7 @@ if (options.mymodel == 'ELM'):
     elif('RD' in compset or 'RD' in options.fates_nutrient):
         parm_file = 'clm_params_c180524.nc'
     else:
-        parm_file = 'clm_params_c210219.nc'   #FATES/CROP
+        parm_file = 'clm_params_c220120.nc'   #FATES/CROP
 if (options.mymodel == 'CLM5'):
     parm_file = 'clm5_params.c171117.nc'
 
@@ -1890,6 +1890,9 @@ if ((options.ensemble_file != '' or int(options.mc_ensemble) != -1) and (options
                output_run.write('#SBATCH --ntasks-per-node 32\n')
             if ('anvil' in options.machine):
               output_run.write('#SBATCH -A condo\n')
+            if (int(options.ng) > 180):
+              output_run.write('#SBATCH -p acme-medium\n')
+            else:
               output_run.write('#SBATCH -p acme-small\n')
         output_run.write("\n")
         if ('cades' in options.machine or 'compy' in options.machine or 'anvil' in options.machine or 'chrysalis' in options.machine):

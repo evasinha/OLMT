@@ -109,6 +109,8 @@ parser.add_option("--cruncep", dest="cruncep", default=False, action="store_true
                   help = 'Use CRU-NCEP meteorology')
 parser.add_option("--cruncepv8", dest="cruncepv8", default=False, action="store_true", \
                   help = 'Use CRU-NCEP meteorology')
+parser.add_option("--site_forcing", dest="site_forcing", default='', \
+                  help = '6-character FLUXNET code for forcing data')
 parser.add_option("--gswp3", dest="gswp3", default=False, action="store_true", \
                   help = 'Use GSWP3 meteorology')
 parser.add_option("--gswp3_w5e5", dest="gswp3_w5e5", default=False, action="store_true", \
@@ -458,6 +460,11 @@ for row in AFdatareader:
         else:
             startyear = int(row[6])
             endyear   = int(row[7])
+        if (options.site_forcing):
+            #US-Ne3 only
+            startyear=2002
+            endyear=2014
+            site_endyear=2014
         if (options.diags): 
             timezone = int(row[9])
 
@@ -465,8 +472,8 @@ for row in AFdatareader:
         ncycle   = endyear-startyear+1   #number of years in met cycle
         ny_ad = options.ny_ad
         ny_fin = options.nyears_final_spinup
-        if (int(options.ny_ad) % ncycle != 0 and options.noad == False):
-          #AD spinup and final spinup lengths must be multiples of met data cyle.
+        #AD spinup and final spinup lengths must be multiples of met data cyle.
+        if (int(options.ny_ad) % ncycle != 0):
           ny_ad = str(int(ny_ad) + ncycle - (int(ny_ad) % ncycle))
         # APW TCOFD
         #if (int(options.nyears_final_spinup) % ncycle !=0 and options.noad == False):
@@ -564,6 +571,8 @@ for row in AFdatareader:
             basecmd = basecmd+' --cn_only'
         if (options.CH4):
             basecmd = basecmd+' --CH4'
+        if (options.site_forcing != ''):
+            basecmd = basecmd+' --site_forcing '+options.site_forcing
         if (options.cruncep):
             basecmd = basecmd+' --cruncep'
         if (options.cruncepv8):
