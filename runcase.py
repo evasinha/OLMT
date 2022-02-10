@@ -1361,6 +1361,7 @@ for i in range(1,int(options.ninst)+1):
         if (options.mymodel == 'ELM'):
             output.write(' check_finidat_fsurdat_consistency = .false.\n')
             output.write(' check_finidat_year_consistency = .false.\n')
+            output.write(' check_dynpft_consistency = .false.\n')
     #pft-physiology file
     output.write(" paramfile = '"+rundir+"/clm_params.nc'\n")
 
@@ -1749,7 +1750,7 @@ if (options.domainfile == ''):
     os.system('cp '+PTCLMdir+'/temp/domain.nc '+runroot+'/'+casename+'/run/')
 if (options.surffile == ''):
     os.system('cp '+PTCLMdir+'/temp/surfdata.nc '+runroot+'/'+casename+'/run/')
-if (options.istrans or '20TR' in compset and options.nopftdyn == False and options.pftdynfile ==''):
+if ((options.istrans or '20TR' in compset) and options.nopftdyn == False and options.pftdynfile ==''):
     os.system('cp '+PTCLMdir+'/temp/surfdata.pftdyn.nc '+runroot+'/'+casename+'/run/')
 
 #submit job if requested
@@ -1890,10 +1891,10 @@ if ((options.ensemble_file != '' or int(options.mc_ensemble) != -1) and (options
                output_run.write('#SBATCH --ntasks-per-node 32\n')
             if ('anvil' in options.machine):
               output_run.write('#SBATCH -A condo\n')
-            if (int(options.ng) > 180):
-              output_run.write('#SBATCH -p acme-medium\n')
-            else:
-              output_run.write('#SBATCH -p acme-small\n')
+              if (int(options.ng) > 180):
+                output_run.write('#SBATCH -p acme-medium\n')
+              else:
+                output_run.write('#SBATCH -p acme-small\n')
         output_run.write("\n")
         if ('cades' in options.machine or 'compy' in options.machine or 'anvil' in options.machine or 'chrysalis' in options.machine):
             #get the software environment

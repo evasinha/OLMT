@@ -89,6 +89,8 @@ parser.add_option("--runroot", dest="runroot", default="", \
                   help="Directory where the run would be created")
 parser.add_option("--run_startyear", dest="run_startyear",default=-1, \
                       help='Starting year for model output (SP only)')
+parser.add_option("--crop", action="store_true", default=False, \
+                  help="Perform a crop model simulation")
 parser.add_option("--srcmods_loc", dest="srcmods_loc", default='', \
                   help = 'Copy sourcemods from this location')
 parser.add_option("--surffile", dest="surffile", default='', \
@@ -347,6 +349,14 @@ else:
 #csmdir = os.getcwd()+'/'+options.csmdir
 csmdir = options.csmdir
 
+#check whether model named clm or elm
+if (os.path.exists(options.csmdir+'/components/elm')):
+  mylsm='ELM'
+  model_name='elm'
+else:
+  mylsm='CLM'
+  model_name='clm2'
+
 #get project information
 myuser = getpass.getuser()
 myproject=''
@@ -585,9 +595,23 @@ mymodel_fnsp = compset_type+'1850'+mymodel+'BC'
 mymodel_adsp = mymodel_fnsp.replace('CNP','CN')
 mymodel_trns = mymodel_fnsp.replace('1850','20TR')
 if (options.sp):
+<<<<<<< HEAD
     mymodel_fnsp = compset_type+'ELMBC'
+=======
+    if (model_name == 'elm'):
+        mymodel_fnsp = compset_type+'ELMBC'
+    else:
+        mymodel_fnsp = compset_type+'CLM45BC'
+>>>>>>> Adds crop options in global_fullrun
     options.noad = True
     options.notrans = True
+if (options.crop):
+    if (model_name == 'elm'):
+        mymodel_fnsp = compset_type+'ELMCNCROP'
+    else:
+        mymodel_fnsp = compset_type+'CLM45CNCROP'
+    mymodel_adsp = mymodel_fnsp
+    mymodel_trns = mymodel_fnsp
 
 #AD spinup
 res=options.res
@@ -679,6 +703,8 @@ if (options.dailyvars):
     cmd_trns = cmd_trns + ' --dailyvars'        
 if (options.dailyrunoff):
     cmd_trns = cmd_trns+' --dailyrunoff'
+if (options.crop):
+    cmd_trns = cmd_trns+' --istrans'
 
 #transient phase 2 (CRU-NCEP only, without coupler bypass)
 if ((options.cruncep or options.gswp3 or options.cruncepv8) and not options.cpl_bypass):
@@ -727,7 +753,10 @@ if (options.noad == False):
 if (options.nofn == False):
     cases.append(basecase+'_'+mymodel_fnsp)
 if (options.notrans == False):
-    cases.append(basecase+'_'+mymodel_trns)
+    if (options.crop):
+        cases.append(basecase+'_'+mymodel_trns+'_trans')
+    else:
+        cases.append(basecase+'_'+mymodel_trns)
 
 if (options.mc_ensemble <= 0):
   for c in cases:
@@ -736,6 +765,7 @@ if (options.mc_ensemble <= 0):
         run_n_total = int(ny_ad)
     elif ('1850' in c):
         run_n_total = int(fsplen)
+<<<<<<< HEAD
     elif ('20TR' in c):
         if (options.finidat == ''):
           model_startdate=1850
@@ -743,6 +773,12 @@ if (options.mc_ensemble <= 0):
           model_startdate=int(options.run_startyear)
         run_n_total = int(translen)
     elif ('ICBELM' in c):
+=======
+    elif ('20TR' in c or '_trans' in c):
+        model_startdate=1850
+        run_n_total = int(translen)
+    elif ('ICBCLM45' in c or 'ICBELM' in c):
+>>>>>>> Adds crop options in global_fullrun
         if (int(options.run_startyear) > 0):
           model_startdate = int(options.run_startyear)
           run_n_total = int(fsplen)
@@ -856,29 +892,29 @@ if (options.mc_ensemble <= 0):
                          '-01-01\n')                           
         if (n > 0):
             #change finidat 
-            mylnd_in = open(caseroot+'/'+c+'/user_nl_clm','r')
-            mylnd_out = open(caseroot+'/'+c+'/user_nl_clm_'+str(n), 'w')
+            mylnd_in = open(caseroot+'/'+c+'/user_nl_'+mylsm.lower(),'r')
+            mylnd_out = open(caseroot+'/'+c+'/user_nl_'+mylsm.lower()+'_'+str(n), 'w')
             for s in mylnd_in:
                 if ('finidat' in s):
                     mylnd_out.write(" finidat = '"+os.path.abspath(runroot)+"/"+c+"/run/"+c+ \
-                              ".clm2.r."+str(10000+model_startdate)[1:]+"-01-01-00000.nc'\n")
+                              "."+model_name+".r."+str(10000+model_startdate)[1:]+"-01-01-00000.nc'\n")
                 else:
                     mylnd_out.write(s)
             mylnd_in.close()
             mylnd_out.close()
-            output.write(" cp user_nl_clm_"+str(n)+" user_nl_clm\n")
+            output.write(" cp user_nl_"+mylsm.lower()+"_"+str(n)+" user_nl_"+mylsm.lower()+"\n")
         model_startdate = model_startdate + runblock          
         output.write("./case.submit --no-batch\n")
         output.write("cd "+os.path.abspath(".")+'\n')
-        #if ('ad_spinup' in c and n == (n_submits-1)):
-        #    if (options.bgc):
-        #        output.write("python adjust_restart.py --rundir "+os.path.abspath(runroot)+ \
-        #                         '/'+ad_case+'/run/ --casename '+ ad_case+' --restart_year '+ \
-        #                     str(int(ny_ad)+1)+' --BGC\n')
-        #    else:
-        #        output.write("python adjust_restart.py --rundir "+os.path.abspath(runroot)+ \
-        #                         '/'+ad_case+'/run/ --casename '+ad_case+' --restart_year '+ \
-        #                         str(int(ny_ad)+1)+'\n')
+        if ('ad_spinup' in c and n == (n_submits-1)):
+            if (options.bgc):
+                output.write("python adjust_restart.py --rundir "+os.path.abspath(runroot)+ \
+                                 '/'+ad_case+'/run/ --casename '+ ad_case+' --restart_year '+ \
+                             str(int(ny_ad)+1)+' --BGC --model_name '+model_name+'\n')
+            else:
+                output.write("python adjust_restart.py --rundir "+os.path.abspath(runroot)+ \
+                                 '/'+ad_case+'/run/ --casename '+ad_case+' --restart_year '+ \
+                                 str(int(ny_ad)+1)+' --model_name '+model_name+'\n')
         output.close()
 
         if not options.no_submit:
