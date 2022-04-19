@@ -716,6 +716,8 @@ if ((options.cruncep or options.gswp3 or options.cruncepv8) and not options.cpl_
         ' --hist_nhtfrq '+options.hist_nhtfrq+' --hist_mfilt '+ \
         options.hist_mfilt+' --no_build'+' --exeroot '+ad_exeroot + \
         ' --compset '+mymodel_trns+' --nopointdata'
+    if (options.crop):
+        cmd_trns2 = cmd_trns2+' --istrans'
     print(cmd_trns2)
 
 #---------------------------------------------------------------------------------
@@ -753,8 +755,11 @@ if (options.noad == False):
 if (options.nofn == False):
     cases.append(basecase+'_'+mymodel_fnsp)
 if (options.notrans == False):
-    if (options.crop):
+    if (options.crop and options.cpl_bypass):
         cases.append(basecase+'_'+mymodel_trns+'_trans')
+    elif (options.crop and not options.cpl_bypass):
+        cases.append(basecase+'_'+mymodel_trns+'_phase1')
+        cases.append(basecase+'_'+mymodel_trns+'_phase2')
     else:
         cases.append(basecase+'_'+mymodel_trns)
 

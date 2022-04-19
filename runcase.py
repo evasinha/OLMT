@@ -590,8 +590,13 @@ if (options.ad_spinup):
     casename = casename+'_ad_spinup'
 if (options.exit_spinup):
     casename = casename+'_exit_spinup'
-if (options.istrans and not "20TR" in compset):
+if (options.istrans and not "20TR" in compset and cpl_bypass):
     casename = casename+'_trans'
+if (options.istrans and not "20TR" in compset and use_reanalysis and (not cpl_bypass)):
+    if options.trans2:
+        casename = casename+'_phase2'
+    else:
+        casename = casename+'_phase1'
 if (options.transtag != ""): 
     casename = casename+'_'+options.transtag
 
@@ -1670,7 +1675,18 @@ if (not cpl_bypass):
             else:
                 mypresaero = '"datm.streams.txt.presaero.clim_2000 1 2000 2000"'
                 myco2=''
-            if (options.cruncep):
+
+                myinput2  = open('./Buildconf/datmconf/datm.streams.txt.presaero.clim_2000')
+                myoutput2 = open('./user_datm.streams.txt.presaero.clim_2000','w')
+                for s in myinput2:
+                    if ('aerosoldep_monthly' in s):
+                        myoutput2.write('            aerosoldep_monthly_1849-2006_1.9x2.5_c090803.nc\n')
+                    else:
+                        myoutput2.write(s)
+                myinput2.close()
+                myoutput2.close()
+
+            if (options.cruncep or options.gswp3):
                 myoutput.write(' streams = "datm.streams.txt.CLMCRUNCEP.Solar '+str(myalign_year)+ \
                                    ' '+str(startyear)+' '+str(endyear)+'  ", '+ \
                                    '"datm.streams.txt.CLMCRUNCEP.Precip '+str(myalign_year)+ \

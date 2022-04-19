@@ -746,8 +746,12 @@ for row in AFdatareader:
               else:
                 ad_case = site+'_ICBCLM45BC'
         else:
-            cmd_adsp = cmd_adsp+' --compset I1850'+mycompset_adsp
-            ad_case = site+'_I1850'+mycompset_adsp
+            if (options.crop):
+              cmd_adsp = cmd_adsp+' --compset I'+mycompset_adsp
+              ad_case = site+'_I'+mycompset_adsp
+            else:
+              cmd_adsp = cmd_adsp+' --compset I1850'+mycompset_adsp
+              ad_case = site+'_I1850'+mycompset_adsp
 
         if (options.noad == False):
             ad_case = ad_case+'_ad_spinup'
@@ -770,7 +774,10 @@ for row in AFdatareader:
                 else:
                   basecase = basecase+'_ICB1850'+mycompset
             else: 
-                basecase = basecase+'_I1850'+mycompset
+                if (options.crop):
+                  basecase = basecase+'_I'+mycompset
+                else:
+                  basecase = basecase+'_I1850'+mycompset
         else:
             if (options.cpl_bypass):
                 if (options.crop):
@@ -778,7 +785,10 @@ for row in AFdatareader:
                 else:
                   basecase=site+'_ICB1850'+mycompset
             else:
-                basecase=site+'_I1850'+mycompset
+                if (options.crop):
+                  basecase = site+'_I'+mycompset
+                else:
+                  basecase=site+'_I1850'+mycompset
             if (options.sp):
                 if (model_name == 'elm'):
                   basecase=site+'_ICBELMBC'
@@ -830,7 +840,10 @@ for row in AFdatareader:
               else:
                 cmd_fnsp = cmd_fnsp+' --compset ICB1850'+mycompset
         else:
-            cmd_fnsp = cmd_fnsp+' --compset I1850'+mycompset
+            if (options.crop):
+              cmd_fnsp = cmd_fnsp+' --compset I'+mycompset
+            else:
+              cmd_fnsp = cmd_fnsp+' --compset I1850'+mycompset
 
         if (options.spinup_vars):
                 cmd_fnsp = cmd_fnsp+' --spinup_vars'
@@ -863,7 +876,10 @@ for row in AFdatareader:
             else:
               cmd_trns = cmd_trns+' --compset ICB20TR'+mycompset
         else:
-            cmd_trns = cmd_trns+' --compset I20TR'+mycompset
+            if (options.crop or options.fates):
+              cmd_trns = cmd_trns+' --istrans --compset I'+mycompset
+            else:
+              cmd_trns = cmd_trns+' --compset I20TR'+mycompset
         
         if (options.spinup_vars):
             cmd_trns = cmd_trns + ' --spinup_vars'
@@ -1176,6 +1192,12 @@ for row in AFdatareader:
                     modelst = 'ICBELMCNCROP'
                   else:
                     modelst = 'ICBCLM45CNCROP'
+            else:
+                if (options.crop):
+                  if (model_name == 'elm'):
+                    modelst = 'IELMCNCROP'
+                  else:
+                    modelst = 'ICLM45CNCROP'
 
             basecase = site
             if (mycaseid != ''):
@@ -1295,7 +1317,10 @@ for row in AFdatareader:
                      else:
                        mycompsetcb = 'ICB20TR'+mycompset
                  else:
-                     mycompsetcb = 'I20TR'+mycompset
+                     if (options.crop or options.fates):
+                       mycompsetcb = 'I'+mycompset+'_trans'
+                     else:
+                       mycompsetcb = 'I20TR'+mycompset
                  output2 = open('./scripts/'+myscriptsdir+'/transdiag_'+site+'.csh','w')
                  output.write("cd "+os.path.abspath(".")+'\n')
                  output2.write("cd "+os.path.abspath(".")+'\n')
