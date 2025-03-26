@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-export UQTK_INS=/home/dmricciuto/models/Uncertainty-Quantification/Param-UQ-Workflow/UQTk_v3.0.2-install
+export UQTK_INS=/qfs/people/ricc364/models/Uncertainty-Quantification/Param-UQ-Workflow/UQTk_v3.0.2-install
 
 if [[ $HOSTNAME == *"titan"* ]] ; then
 

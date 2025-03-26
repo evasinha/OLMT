@@ -323,6 +323,9 @@ if (options.machine == ''):
    elif ('chrlogin' in hostname):
        options.machine = 'chrysalis'
        npernode = 64    
+   elif ('pm-cpu' in hostname):
+       options.machine = 'pm-cpu'
+       npernode = 128
    else:
        print('ERROR in site_fullrun.py:  Machine not specified.  Aborting')
        sys.exit(1)
@@ -334,9 +337,11 @@ elif (options.machine == 'cades'):
 elif (options.machine == 'edison' or 'cori' in options.machine):
     ccsm_input = '/project/projectdirs/acme/inputdata'
 elif ('anvil' in options.machine or 'chrysalis' in options.machine):
-    ccsm_input = '/home/ccsm-data/inputdata'
+    ccsm_input = '/lcrc/group/e3sm/data/inputdata'
 elif ('compy' in options.machine):
     ccsm_input = '/compyfs/inputdata/'
+elif ('pm-cpu' in options.machine):
+    ccsm_input = '/global/cfs/cdirs/e3sm/inputdata/'
 
 #if (options.compiler != ''):
 #    if ('cori' in options.machine):
@@ -375,10 +380,13 @@ if (options.runroot == '' or (os.path.exists(options.runroot) == False)):
            myproject=s[:-1] 
         print('Project = '+myproject)
     elif ('anvil' in options.machine or 'chrysalis' in options.machine):
-        runroot="/lcrc/group/acme/"+myuser
+        runroot="/lcrc/group/e3sm/"+myuser
         myproject='e3sm'
     elif ('compy' in options.machine):
         runroot='/compyfs/'+myuser+'/e3sm_scratch'
+        myproject='e3sm'
+    elif ('pm-cpu' in options.machine):
+        runroot='/pscratch/sd/'+myuser[0]+'/'+myuser+'/e3sm_scratch/pm-cpu/'
         myproject='e3sm'
     else:
         runroot = csmdir+'/run'
@@ -1089,7 +1097,7 @@ for row in AFdatareader:
             mysubmit_type = 'qsub'
             groupnum = int(sitenum/npernode)
             if ('cades' in options.machine or 'anvil' in options.machine or 'chrysalis' in options.machine or \
-                'compy' in options.machine or 'cori' in options.machine):
+                'compy' in options.machine or 'cori' in options.machine or 'pm-cpu' in options.machine):
                 mysubmit_type = 'sbatch'
             if ('ubuntu' in options.machine):
                 mysubmit_type = ''
@@ -1209,7 +1217,7 @@ for row in AFdatareader:
                   mycasedir=caseroot+'/'+basecase+'_'+modelst.replace('CNP','CN')+'_ad_spinup' 
                 else:
                   mycasedir=caseroot+'/'+basecase+'_'+modelst
-            if (sitenum % npernode == 0 and ('compy' in options.machine or 'anvil' in options.machine or 'chrysalis' in options.machine)):
+            if (sitenum % npernode == 0 and ('compy' in options.machine or 'anvil' in options.machine or 'chrysalis' in options.machine or 'pm-cpu' in options.machine)):
               softenvfile = open(mycasedir+'/software_environment.txt','r')
               for line in softenvfile:
                 if ('LD_LIBRARY_PATH' in line[0:20]):

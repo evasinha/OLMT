@@ -791,7 +791,7 @@ else:
               +tmpdir+'/clm_params.nc')
     myncap = 'ncap'
     if ('cades' in options.machine or 'chrysalis' in options.machine or 'compy' in options.machine or 'ubuntu' in options.machine \
-          or 'mymac' in options.machine or 'anvil' in options.machine):
+          or 'mymac' in options.machine or 'anvil' in options.machine or 'pm-cpu' in options.machine):
       myncap='ncap2'
 
     flnr = nffun.getvar(tmpdir+'/clm_params.nc','flnr')
@@ -1857,7 +1857,7 @@ if ((options.ensemble_file != '' or int(options.mc_ensemble) != -1) and (options
     #Launch ensemble if requested 
     mysubmit_type = 'qsub'
     if ('cades' in options.machine or 'compy' in options.machine or 'ubuntu' in options.machine or 'cori' in options.machine or \
-        options.machine == 'anvil' or options.machine == 'chrysalis'):
+        options.machine == 'anvil' or options.machine == 'chrysalis' or 'pm-cpu' in options.machine):
         mysubmit_type = 'sbatch'
     if (options.ensemble_file != ''):
         os.system('mkdir -p '+PTCLMdir+'/scripts/'+myscriptsdir)
@@ -1911,8 +1911,11 @@ if ((options.ensemble_file != '' or int(options.mc_ensemble) != -1) and (options
                 output_run.write('#SBATCH -p acme-medium\n')
               else:
                 output_run.write('#SBATCH -p acme-small\n')
+            if ('pm-cpu' in options.machine):
+              output_run.write('#SBATCH --qos=regular\n')
+              output_run.write('#SBATCH --constraint=cpu\n')
         output_run.write("\n")
-        if ('cades' in options.machine or 'compy' in options.machine or 'anvil' in options.machine or 'chrysalis' in options.machine):
+        if ('cades' in options.machine or 'compy' in options.machine or 'anvil' in options.machine or 'chrysalis' in options.machine or 'pm-cpu' in options.machine):
             #get the software environment
             softenvfile = open(casedir+'/software_environment.txt','r')
             for line in softenvfile:
@@ -1937,7 +1940,7 @@ if ((options.ensemble_file != '' or int(options.mc_ensemble) != -1) and (options
                +'--case '+casename+' --runroot '+runroot+' --n_ensemble '+str(nsamples)+' --ens_file '+ \
                options.ensemble_file+' --exeroot '+exeroot+' --parm_list '+options.parm_list+' --cnp '+cnp + \
                ' --site '+options.site+' --model_name '+model_name
-        elif ('anvil' in options.machine or 'cori' in options.machine or 'chrysalis' in options.machine):
+        elif ('anvil' in options.machine or 'cori' in options.machine or 'chrysalis' in options.machine or 'pm-cpu' in options.machine):
             cmd = 'srun -n '+str(np_total)+' python manage_ensemble.py ' \
                +'--case '+casename+' --runroot '+runroot+' --n_ensemble '+str(nsamples)+' --ens_file '+ \
                options.ensemble_file+' --exeroot '+exeroot+' --parm_list '+options.parm_list+' --cnp '+cnp + \

@@ -3,6 +3,7 @@ import os, sys, csv, time, math
 from optparse import OptionParser
 import numpy
 import netcdf4_functions as nffun
+import netCDF4
 from netCDF4 import Dataset
 
 parser = OptionParser()
@@ -79,7 +80,7 @@ if ('hcru' in options.res):
     resx = 0.5
     resy = 0.5
     domainfile_orig = ccsm_input+'/share/domains/domain.clm/domain.lnd.360x720_cruncep.100429.nc'
-    pftdyn_orig = ccsm_input+'/lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_50pfts_simyr1850-2015_c210726.nc'
+    pftdyn_orig = ccsm_input+'/lnd/clm2/surfdata_map/landuse.timeseries_360x720cru_hist_50pfts_simyr1850-2015_c240202.nc'
     nyears_landuse=166
     if (options.mymodel == 'CLM5'):
         surffile_orig = ccsm_input+'/lnd/clm2/surfdata_map/surfdata_360x720cru_16pfts_Irrig_CMIP6_simyr1850_c170824.nc'
@@ -860,7 +861,7 @@ if (options.nopftdyn == False):
         
         #read file for site-specific PFT information
         dynexist = False
-        mypft_frac = numpy.zeros([npft+npft_crop], numpy.float)
+        mypft_frac = numpy.zeros([npft+npft_crop], float)
         if (options.surfdata_grid == False and options.site != ''):
             AFdatareader = csv.reader(open(ccsm_input+'/lnd/clm2/PTCLM/'+options.sitegroup+'_pftdata.txt','r'))
             for row in AFdatareader:
